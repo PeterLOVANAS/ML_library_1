@@ -64,7 +64,9 @@ class Dense(Layer):
     def backward(self, output_gradient , learning_rate):  # output_gradient is ∂E/∂Y
         weights_gradient = output_gradient @ self.input.T   # Eq1: weights_gradient = ∂E/∂W  (j,i)
         input_gradient = self.weights.T @ output_gradient # ∂E/∂X which is the output gradient of a previous layer of the ANN
-        weights_gradient = clip_gradient_by_norm(weights_gradient , 1e+50)
-        self.weights -= learning_rate * weights_gradient  # learning_rate is a scalar and W and ∂E/∂W has the same shape
-        self.bias -= learning_rate * output_gradient  # Eq2
+        #weights_gradient = clip_gradient_by_norm(weights_gradient , 1e+50)
+        self.weights_gradient = weights_gradient
+        self.bias_gradient = output_gradient
+        #self.weights -= learning_rate * weights_gradient  # learning_rate is a scalar and W and ∂E/∂W has the same shape
+        #self.bias -= learning_rate * output_gradient  # Eq2
         return input_gradient
