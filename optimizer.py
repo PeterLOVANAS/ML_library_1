@@ -25,20 +25,37 @@ class Optimizer:
 
     
 class Gradient_Descent(Optimizer):
-    def __init__(self, avg_grad_model, learning_rate , momentum , acceleration: bool = False):
+    def __init__(self, avg_grad_model, learning_rate: float , momentum: float , acceleration: bool = False):
         super().__init__()
         self.learning_rate = learning_rate
         self.momentum = momentum
         self.acceleration = acceleration
-        self.velocity = initialize()
+        self.velocity = self.initialize()
         
     def calculate(self):
+        for v , p in zip(self.velocity , self.avg_grad_model):
+            grad = p
+            if acceleration == True:
+                grad += (self.momentum * v)
+            elif acceleration == False:
+                pass
+            
+            v = (v*self.momentum)  - (self.learning_rate * grad)
+         
         
+        return self.velocity
+            
         
         
         
     def initialize(self):
+        velocity = []
+        for p in self.avg_grad_model:
+            v_x_p = np.zeros(p.shape)
+            velocity.append(v_x_p)
         
+        return np.array(velocity) 
+            
         
         
         
