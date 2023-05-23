@@ -15,10 +15,30 @@ class Optimizer:
         # Ex. MGD has v_t
 
 
-    def calcualate(self):
+    def calculate(self):
         pass
 
 
     def initialize(self):
         pass
 
+
+    
+class Gradient_Descent(Optimizer):
+    def __init__(self, avg_grad_model, learning_rate , momentum , acceleration: bool = False):
+        super().__init__()
+        self.learning_rate = learning_rate
+        self.momentum = momentum
+        self.acceleration = acceleration
+        self.velocity = initialize()
+        
+    def calculate(self):
+        
+        
+        
+        
+    def initialize(self):
+        
+        
+        
+        
