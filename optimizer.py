@@ -8,8 +8,8 @@ avg_grad_part_i = [θ_1 , θ_2 , θ_3 , ... , θ_i] => Shape might be anything! 
 
 
 class Optimizer:
-    def __init__(self):    # Hyperparameters of the optimizer (Ex. τ , β_1 , β_2 , ε ,etc.)
-        self.avg_grad_model = None   # avg_grad_model can contain any parameters, θ (weight, bias ,etc.)
+    def __init__(self , avg_grad_model):    # Hyperparameters of the optimizer (Ex. τ , β_1 , β_2 , ε ,etc.)
+        self.avg_grad_model = avg_grad_model   # avg_grad_model can contain any parameters, θ (weight, bias ,etc.)
         # self.memory could be varied based on the optimizer.
         # Ex. Adam has Ɣ_t and μ_t
         # Ex. MGD has v_t
