@@ -32,22 +32,40 @@ Theory
     
 """
 
-def mse(y_target , y_pred):
-    return np.mean(np.square(y_target - y_pred))
-
-def mse_prime(y_target , y_pred):
-    return (2 * (y_pred - y_target)) / y_target.shape[0]
 
 
-def mse_prime_BGD(y_target , y_pred):
-    return 2 * (y_pred - y_target)
+class loss_func:
+    def __init__(self, y_target , y_pred):
+        self.y_target = y_target
+        self.y_pred = y_pred
 
-def mse_BGD(y_target , y_pred):
-    return np.square(y_target - y_pred)
+    def loss(self):
+        pass
+
+    def loss_prime(self):
+        pass
 
 
-def binary_cross_entropy(y_true, y_pred):
-    return -(1 / np.size(y_true)) * np.sum((y_true * np.log(y_pred)) + ((1 - y_true) * np.log(1 - y_pred)))
+class mse(loss_func):
+    def __init__(self, y_target , y_pred):
+        super().__init__(y_target , y_pred)
 
-def binary_cross_entropy_prime(y_true, y_pred):
-    return (1 / np.size(y_true)) * (((1-y_true) / (1- y_pred)) - (y_true / y_pred))
+    def loss(self):
+        return np.mean(np.square(self.y_target - self.y_pred))
+
+    def loss_prime(self):
+        return (2 * (self.y_pred - self.y_target)) / self.y_target.shape[0]
+
+
+
+
+class binary_cross_entropy(loss_func):
+    def __init__(self, y_target , y_pred):
+        super().__init__(y_target, y_pred)
+
+    def loss(self):
+        return -(1 / np.size(self.y_target)) * np.sum((self.y_target * np.log(self.y_pred)) + ((1 - self.y_target) * np.log(1 - self.y_pred)))
+
+    def loss_prime(self):
+        return (1 / np.size(self.y_target)) * (((1-self.y_target) / (1- self.y_pred)) - (self.y_target / self.y_pred))
+

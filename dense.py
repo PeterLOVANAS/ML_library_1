@@ -61,7 +61,7 @@ class Dense(Layer):
         self.input = input
         return (self.weights @ self.input) + self.bias  # Y = (W @ X) + B  => Output vector
 
-    def backward(self, output_gradient , learning_rate):  # output_gradient is ∂E/∂Y
+    def backward(self, output_gradient):  # output_gradient is ∂E/∂Y
         weights_gradient = output_gradient @ self.input.T   # Eq1: weights_gradient = ∂E/∂W  (j,i)
         input_gradient = self.weights.T @ output_gradient # ∂E/∂X which is the output gradient of a previous layer of the ANN
         #weights_gradient = clip_gradient_by_norm(weights_gradient , 1e+50)
@@ -70,3 +70,19 @@ class Dense(Layer):
         #self.weights -= learning_rate * weights_gradient  # learning_rate is a scalar and W and ∂E/∂W has the same shape
         #self.bias -= learning_rate * output_gradient  # Eq2
         return input_gradient
+
+    def parameters(self):
+        return [self.weights , self.bias]
+
+
+    def get_gradients(self):
+
+        return [self.weights_gradient , self.bias_gradient]
+
+
+    def update(self , new_param):
+        self.weights = new_param[0]
+        self.bias = new_param[1]
+
+
+

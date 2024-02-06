@@ -12,7 +12,7 @@ from alive_progress import alive_bar
 from skimage.measure import block_reduce
 from utility import MaxPooling2D
 from activation_func import ReLU, Tanh
-
+from preprocessing import normalize_image
 
 
 def get_fashion_mnist():
@@ -34,6 +34,17 @@ test_images = test_images_1[:1000]
 test_labels = test_labels_1[:1000]
 print("finished loading data")
 
+# preprocessing
+def normalized_dataset(x):
+    norm_x = []
+    for i in train_images:
+        norm_img = normalize_image(i)
+        norm_x.append(norm_img)
+    return np.array(norm_x)
+
+norm_train_images = normalized_dataset(train_images)
+norm_test_images = normalized_dataset(test_images)
+print("normalized finished")
 
 
 
@@ -51,7 +62,7 @@ modelV2 = [
     Softmax()
 ]
 
-modelV1 = [
+modelV3 = [
     Convolution((1,28,28) , 3, 5 ),
     ReLU(),
     MaxPooling2D((2,2) , 2),
@@ -59,13 +70,27 @@ modelV1 = [
     ReLU(),
     Reshape((5,11,11), (5*11*11 , 1)),
     Dense(5*11*11, 100),
-    Sigmoid(),
+    ReLU(),
     Dense(100 , 10),
     Softmax()
 ]
 
+modelV1 = [
+    Convolution((1,28,28) , 3, 5 ),
+    Sigmoid(),
+    Convolution((1,26 ,26) , 3 , 5),
+    Sigmoid(),
+    Reshape((5,24,24), (5*24*24 , 1)),
+    Dense(5*24*24, 100),
+    Sigmoid(),
+    Dense(100 , 10),
+    Softmax()
+
+
+]
+
 epochs = 50
-lr = 0.001
+lr = 0.01
 
 
 # training
@@ -75,7 +100,7 @@ for e in range(epochs):
     tracking = 1
     nr_correct = 0
     with alive_bar(total = num_sample , title =f"Epoch {e+1}" , theme = "smooth" ) as bar:
-        for x , y in zip(train_images , train_labels):
+        for x , y in zip(norm_train_images , train_labels):
             # Forward propagation
             output = x
             for layers in modelV1:
@@ -106,7 +131,7 @@ for e in range(epochs):
 
 nr_correct_test = 0
 with alive_bar(total = test_labels.shape[0] , title =f"Epoch {e+1}" , theme = "smooth" ) as bar:
-    for x ,y in zip(test_images , test_labels):
+    for x ,y in zip(norm_test_images , test_labels):
         output = x
         for layers in modelV1:
             output = layers.forward(output)

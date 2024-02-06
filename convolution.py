@@ -145,7 +145,7 @@ class Convolution(Layer):
 
         return self.output
 
-    def backward(self, output_gradient , learning_rate):
+    def backward(self, output_gradient):
         kernel_grad = np.zeros(self.kernel_shape)
         input_grad = np.zeros(self.input_shape)
 
@@ -155,7 +155,19 @@ class Convolution(Layer):
                 kernel_grad[i, j] = signal.correlate2d(self.input[j] , output_gradient[i] , "valid")
                 input_grad[j] += signal.convolve2d(output_gradient[i] , self.kernels[i,j] , "full")  # ∂E/∂X_j  = ∑ ∂E/∂Y_i ❊_full K_ij  # This also indicate that every matrix in the Input tenser is updated.
 
-        kernel_grad = clip_gradient_by_norm(kernel_grad,1e+50)
-        self.kernels -= learning_rate * kernel_grad  # We can see that the shape of kernel_grad is equal to the kernel in this layer (initialize)
-        self.biases -= learning_rate * output_gradient
+        #kernel_grad = clip_gradient_by_norm(kernel_grad,1e+50)
+        self.kernel_grad = kernel_grad
+        self.biases_grad = output_gradient
+        #self.kernels -= learning_rate * self.kernel_grad  # We can see that the shape of kernel_grad is equal to the kernel in this layer (initialize)
+        #self.biases -= learning_rate * self.biases_grad
         return input_grad
+
+    def parameters(self):
+        return [self.kernels , self.biases]
+
+    def get_gradients(self):
+        return [self.kernel_grad , self.biases_grad]
+
+    def update(self , new_param):
+        self.kernel = new_param[0]
+        self.biases = new_param[1]

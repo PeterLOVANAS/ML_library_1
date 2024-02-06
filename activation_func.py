@@ -60,7 +60,7 @@ class Softmax(Layer):
         self.output = exp_vec / np.sum(exp_vec)
         return self.output
 
-    def backward(self, output_gradient , learning_rate):
+    def backward(self, output_gradient):
         k_n = self.output.shape[0]
         M = np.tile(self.output , k_n)  # Intuition: b = np.array([[1], [2], [3]]) => np.tile(b , 3) => output: array([[1 ,1 ,1] , [2 ,2 ,2] , [3, 3 ,3]])
         return (M * (np.identity(k_n) - M.T)) @ output_gradient  # return ∂E/∂X to the previous layer

@@ -91,6 +91,87 @@ class MaxPooling2D:
 
         return np.array(Mask_tensor)
 
+# dataset => [X ,Y]  OR  [X]
+class dataloader:
+
+    def __init__(self, dataset: list , batch_size: int , shuffle: bool):
+        """
+        :param dataset: list   EX.  [X ,Y]  OR  [X]
+        :param batch_size:  int  EX. 32 , 256
+        :param shuffle: bool
+        """
+        self.total_samples = len(dataset[0])
+        self.dataset = dataset
+        self.shuffle = shuffle
+        self.batch_size = batch_size
+
+
+    def shuffle_dataset(self):
+        # Shuffle
+        dataset_shuffle = []
+        if self.shuffle == True:
+            idx_shuffle = np.arange(self.total_samples)
+            np.random.shuffle(idx_shuffle)
+            for v in self.dataset:
+                x = v[idx_shuffle.tolist()]
+                dataset_shuffle.append(x)
+
+        elif self.shuffle == False:
+            dataset_shuffle = self.dataset
+
+        return dataset_shuffle
+
+
+    def create_batch(self):
+        data_batch_split = []
+        dataset_shuffle = self.shuffle_dataset()
+        for v in dataset_shuffle:
+            v_batch_split = []
+
+            for i in range(0 , self.total_samples // self.batch_size):
+                start_idx = i * self.batch_size
+                end_idx = (i+1) * self.batch_size
+                batch_data = v[start_idx: end_idx]
+                v_batch_split.append(batch_data)
+
+            if self.total_samples % self.batch_size != 0:
+                start_idx = (self.total_samples // self.batch_size) * self.batch_size
+                end_idx = self.total_samples
+                batch_data = v[start_idx:end_idx]
+                v_batch_split.append(batch_data)
+
+            else:
+                pass
+
+            data_batch_split.append(np.array(v_batch_split , dtype=object))
+
+
+        return np.array(data_batch_split , dtype= object)
+
+    def __iter__(self):
+        self.current_batch = 0
+        self.batch_data = self.create_batch()
+        return self
+
+    def __next__(self):
+        if len(self.dataset[0]) % self.batch_size == 0:
+            if self.current_batch >= len(self.dataset[0]) // self.batch_size:
+                raise StopIteration
+
+        elif len(self.dataset[0]) % self.batch_size != 0:
+            if self.current_batch >= (len(self.dataset[0]) // self.batch_size) + 1:
+                raise StopIteration
+
+        batch_input = self.batch_data[0, self.current_batch]
+
+        if len(self.dataset) > 1:
+            batch_label = self.batch_data[1, self.current_batch]
+            self.current_batch += 1
+            return batch_input, batch_label
+        else:
+            self.current_batch += 1
+            return batch_input
+
 
 def clip_gradient_by_norm(param_gradient, clip_norm): # clip_norm is a number value
     param_gradient_norm = np.linalg.norm(param_gradient)  # This turns out to be a just a length of a vector
@@ -99,6 +180,21 @@ def clip_gradient_by_norm(param_gradient, clip_norm): # clip_norm is a number va
     else:
         pass
     return param_gradient
+
+
+
+if __name__ == "__main__":
+    dataset = [np.array([np.random.randn(10,10), np.random.randn(10,10), np.random.randn(10,10), np.random.randn(10,10), np.random.randn(10,10)]), np.array([10, 20, 30, 40, 50])]
+    #arr = np.array([np.random.randn(10,10), np.random.randn(10,10), np.random.randn(10,10), np.random.randn(10,10), np.random.randn(10,10)])
+    #print(arr[0:3].shape)
+    #dataset = [np.array([1,2,3,4,5]) , np.array([10,20,30,40,50])]
+    batch_size = 2
+    shuffle = True
+    data_loader = dataloader(dataset, batch_size, shuffle)
+    for d in data_loader:
+        print(d)
+
+
 
 
 

@@ -41,5 +41,5 @@ class Activation(Layer):
         self.input = input  # Input of the activation layer which is Y (according the above theory)
         return self.activation(self.input) # The output of this layer then become F = f(Y)
 
-    def backward(self, output_gradient , learning_rate):
+    def backward(self, output_gradient):
         return output_gradient * self.activation_prime(self.input)  # self.input is X

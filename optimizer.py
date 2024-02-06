@@ -97,6 +97,7 @@ class RMSprop(Optimizer):
 class Adam(Optimizer):
     def __inti__(self , avg_grad_model , learning_rate: float, beta_1: float ,beta_2: float ,epsilon: float):
         super().__init__()
+        self.avg_grad_model = avg_grad_model
         self.learning_rate = learning_rate
         self.beta_1 = beta_1
         self.beta_2 = beta_2
