@@ -42,6 +42,8 @@ class Module:
 
 
 
+
+
 """
 for x_batch , y_batch in dataset:
     avg_grad = []
