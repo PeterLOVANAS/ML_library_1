@@ -1,5 +1,5 @@
 import numpy as np
-
+from convolution import Convolution
 
 class Module:
     def __init__(self):
@@ -21,23 +21,24 @@ class Module:
 
 
     def backward(self , loss_grad):  # Backpropagation through entire model after getting loss gradient
-        gradient = []
+        dw_gradient = []
+        db_gradient = []
+        all_layer_grad = [] # both weights and biases of the entire model
         output_grad_layer = loss_grad
         for l in reversed(self.layers):
+            
             output_grad_layer = l.backward(output_grad_layer)
-
             if l.get_gradients() == None:  # Activation function
                 pass
 
             else:
-                print(l.get_gradients()[0].shape)
-                print(l.get_gradients()[1].shape)
-                grad_arr = np.array(l.get_gradients())
-                gradient.append(grad_arr)
+                dw_gradient.append(l.get_gradients()[0])
+                db_gradient.append(l.get_gradients()[1])
 
-        return np.array(reversed(gradient), dtype = object)
+        all_layer_grad.append(reversed(dw_gradient))
+        all_layer_grad.append(reversed(db_gradient))
 
-
+        return all_layer_grad # Return the gradients of the entire model
 
 
 

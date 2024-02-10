@@ -76,7 +76,6 @@ class Dense(Layer):
 
 
     def get_gradients(self):
-
         return [self.weights_gradient , self.bias_gradient]
 
 

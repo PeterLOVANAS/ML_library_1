@@ -32,22 +32,21 @@ class Gradient_Descent(Optimizer):
         self.learning_rate = learning_rate
         self.momentum = momentum
         self.acceleration = acceleration
-        self.velocity = self.initialize()
+        
 
     def compute(self):
+        self.velocity = self.initialize()
         velocity = []
         for v , p in zip(self.velocity , self.avg_grad_model):
             grad = p
+            v_tf = (v*self.momentum) - (self.learning_rate * grad)
             if self.acceleration == True:
-                grad += (self.momentum * v)
+                velocity.append(self.momentum*(v_tf- v) + v_tf)
             elif self.acceleration == False:
-                pass
-
-            velocity.append((v*self.momentum)  - (self.learning_rate * grad))
-
-        self.velocity = np.array(velocity)
-
-        return self.velocity
+                velocity.append(v_tf)
+            
+        self.velocity = np.array(velocity, dtype = object)
+        return velocity
 
     def initialize(self):
         velocity = []
@@ -55,7 +54,7 @@ class Gradient_Descent(Optimizer):
             v_x_p = np.zeros(p.shape)
             velocity.append(v_x_p)
 
-        return np.array(velocity)
+        return np.array(velocity, dtype = object)
 
 
 
@@ -67,9 +66,10 @@ class RMSprop(Optimizer):
         self.momentum = momentum
         self.beta = beta
         self.epsilon = epsilon
-        self.mu, self.velocity = self.initialize()
+        
 
     def compute(self):
+        self.mu, self.velocity = self.initialize()
         velocity = []
         mu = []
         for v ,m, p in zip(self.velocity , self.mu,self.avg_grad_model):
@@ -103,10 +103,10 @@ class Adam(Optimizer):
         self.beta_2 = beta_2
         self.t = 1
         self.epsilon = epsilon
-        self.gamma ,self.mu =  self.initialize()
-
+        
 
     def compute(self):
+        self.gamma ,self.mu =  self.initialize()
         gamma = []
         mu = []
         for  g, m ,p in zip(self.gamma , self.mu ,self.avg_grad_model):

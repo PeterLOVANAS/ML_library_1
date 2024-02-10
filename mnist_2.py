@@ -32,8 +32,8 @@ def get_mnist():
 train_images_1 , test_images_1 , train_labels_1 , test_labels_1 = get_mnist()
 
 
-train_images = train_images_1[:30000]
-train_labels = train_labels_1[:30000]
+train_images = train_images_1[:10000]
+train_labels = train_labels_1[:10000]
 
 val_images = train_images_1[30001:35001]
 val_labels = train_labels_1[30001:35001]
@@ -49,6 +49,7 @@ val_list = [val_images , val_labels]
 data_train = dataloader(train_list , batch_size= 512 , shuffle= True )
 data_val = dataloader(val_list , batch_size=512 , shuffle= True)
 print("finished preprocessing")
+
 
 # Defining the model's architecture
 
@@ -68,9 +69,12 @@ print("finish defining the model's architecture")
 print("start of training")
 opt = Gradient_Descent(avg_grad_model=[] ,learning_rate=0.01 , momentum=0.9 , acceleration=True)
 model_V1.compile(optimizer=opt , loss= loss.mse , metric=["accuracy"])
-hist = model_V1.fit(data= data_train , epochs = 20 , validation_data=data_val)
+hist = model_V1.fit(data= data_train , epochs = 2 , validation_data=data_val)
 print(hist) 
 
+
+
+# shift+r => to run this code on a python interactive window 
 
 
 

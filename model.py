@@ -108,8 +108,7 @@ class Sequential(nn.Module):
         for e in range(epochs):
             loss_train_sum = []
             y_train_pred = []
-            with alive_bar(total = data.total_samples , title =f"Epoch {e+1}" , theme = "smooth" ) as bar:
-
+            with alive_bar(total = round(len(data_train.dataset)/ data_train.batch_size), title =f"Epoch {e+1}" , theme = "smooth" ) as bar:
                 for batch in data_train:
                     avg_grad_batch = 0
                     if len(batch) == 2:  # batch = (X,Y)
@@ -121,23 +120,52 @@ class Sequential(nn.Module):
                             loss_obj = self.loss(y , output) # ***WARNING*** => y needs to categorical vector
                             loss_train_sum.append(loss_obj.loss())
                             output_gradient = loss_obj.loss_prime()
-                            model_grad_sample = self.backward(output_gradient) # [ [dW_1 , dB_1], [dW_2 , dB_2], [dW_3 , dB_3] , ... , [dW_l , dB_l] ]  gradients of parameters in layer l
+                            model_grad_sample = self.backward(output_gradient) 
                             avg_grad_batch_sum.append(model_grad_sample)
+                            # split model_grad_sample into two lists: one contain dW_l and the other contain dB_l  
 
-                        avg_grad_batch = np.sum(avg_grad_batch_sum) / len(batch[0]) # [[dW_l_avg , dB_l_avg]] <= Shape (l , #θ) <= In this case the shape is (l , 2) as #θ (weights and biases)
+                    
+                        # Initialize the sum of gradients for each sample
+                        sum_dW = [np.zeros_like(arr) for arr in avg_grad_batch_sum[0][0]] # [np.zeros_like(dW_1) , np.zeros_like(dW_2) , np.zeros_like(dW_3) , ... , np.zeros_like(dW_l)]
+                        sum_dB = [np.zeros_like(arr) for arr in avg_grad_batch_sum[0][1]]
 
+                        
+                        
+                        # For each sample
+                        for sample in avg_grad_batch_sum:
+                            # For each layer in this sample
+                            for i, (dW, dB) in enumerate(zip(sample[0], sample[1])): # i is the index of the sample in the sample_model list
+                                # Add the gradients for this layer to the sum for this sample
+
+                                sum_dW[i] += dW
+                                sum_dB[i] += dB
+
+                        avg_dW = [arr / len(avg_grad_batch_sum)  for arr in sum_dW] # [dW_1_avg , dW_2_avg , dW_3_avg , ... , dW_l_avg]
+                        avg_dB = [arr / len(avg_grad_batch_sum)  for arr in sum_dB] # [dB_1_avg , dB_2_avg , dB_3_avg , ... , dB_l_avg]
+
+                        number_of_feasible_layer = len(avg_dW) # Number of layers in the model that works with the optimizer
+                        
+
+                        avg_grad_batch = [ [dw_avg_l , db_avg_l] for dw_avg_l , db_avg_l in zip(avg_dW , avg_dB)]  # [[dW_l_avg , dB_l_avg]] <= Shape (l , #θ) <= In this case the shape is (l , 2) as #θ (weights and biases: 2 parameters)
+
+                        avg_grad_batch = np.array(avg_grad_batch, dtype= object) # Shape: (l ,w #θ) <= #θ is the number of parameters in each layer (e.g. W and B)
+
+                        
                         # Optimization
                         opt_terms = []  # Each element is the optimized term of each parameters (e.g. W,B)
                         for i in range(avg_grad_batch.shape[1]):
-                            self.optimizer.avg_grad_model = avg_grad_batch[: , i] # i = 0 = dW , i = 1 = dB
-                            opt_terms.append(self.optimizer.compute())
+                            self.optimizer.avg_grad_model = avg_grad_batch[:, i]
+                            
+                            opt_term = self.optimizer.compute()
+                            
+                            opt_terms.append(opt_term)
 
                         # Update parameters
-                        for l in self.layers:
+                        for l, num_l in zip(self.layers, range(number_of_feasible_layer)):
                             if l.get_gradients() == None:  # Activation function
                                 pass
                             else:
-                                new_param = [p + opt_terms for p , opt_term in zip(l.parameters() , opt_terms)]
+                                new_param = [p + opt_terms[num_l] for p , opt_terms in zip(l.parameters() , opt_terms)]
                                 l.update(new_param)
 
 
@@ -146,8 +174,10 @@ class Sequential(nn.Module):
                     elif len(batch) == 1:
                         output = self.forward(batch[0])
                         pass
-                        #  Required more knowledge on this area as the model only receive X not Y
 
+                    bar()
+                        #  Required more knowledge on this area as the model only receive X not Y
+                print("finished the loop")
             # Calculate the "average" loss of this entire training dataset
             history["loss_train"].append(np.array(loss_train_sum).mean())
 
@@ -162,7 +192,11 @@ class Sequential(nn.Module):
                     # Choose the metric
                     for i in self.metric:
                         if i.__name__ == m.replace("_train" , ""):
-                            history[m].append(i(y_true = np.argmax(data.dataset[1]) , y_pred = y_train_pred)) # Assume that data.dataset[1] is a categorical vector (array)
+                            y_train_true = []
+                            for y_true in data.dataset[1]:
+                                y_train_true.append(np.argmax(y_true))
+
+                            history[m].append(i(y_true = y_train_true , y_pred = y_train_pred)) # Assume that data.dataset[1] is a categorical vector (array)
 
 
 
@@ -185,7 +219,7 @@ class Sequential(nn.Module):
                 history["loss_validation"].append(np.array(loss_val_sum).mean())
 
                 if len(self.metric) != 0:
-                    # Find accuracy or other metrics (train)
+                    # Find accuracy or other metrics (validation)
                     pattern = r"\w+_validation"
                     for m in [k for k in list(history.keys()) if bool(re.fullmatch(pattern, k))]:
                         if m == "loss_validation":
@@ -194,7 +228,10 @@ class Sequential(nn.Module):
                         # Choose the metric
                         for i in self.metric:
                             if i.__name__ == m.replace("_validation" , ""):
-                                history[m].append(i(y_true = np.argmax(validation_data.dataset[1]) , y_pred = y_val_pred))
+                                y_val_true = []
+                                for y_true in data_val.dataset[1]:
+                                    y_val_true.append(np.argmax(y_true))
+                                history[m].append(i(y_true = y_val_true , y_pred = y_val_pred))
 
         return history
 
